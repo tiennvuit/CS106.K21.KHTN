@@ -1,1 +1,1 @@
-# CS106.K21.KHTN-AI
+# Project AI
