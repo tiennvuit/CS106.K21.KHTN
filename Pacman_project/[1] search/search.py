@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -86,74 +86,74 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    
+
     frontier = util.Stack()
-    
+
     visited = [] # Visited states
     path = [] # Every state keeps it's path from the starting state.
-    
+
     # Check if initial state is goal state #
     if problem.isGoalState(problem.getStartState()):
         return []
-    
+
     # Start from the beginning and find a solution, path is an empty list #
     frontier.push((problem.getStartState(), []))
-    
+
     while(1):
-        
+
         # Terminate condition: can't find solution #
         if frontier.isEmpty():
             return []
-        
+
         # Get informations of current state #
         xy, path = frontier.pop() # Take position and path
         visited.append(xy)
-        
+
         if problem.isGoalState(xy):
             return path
-        
+
         # Get successors of current state #
         succ = problem.getSuccessors(xy)
-        
+
         # Add new state in stack and fix their path #
         if succ:
             for item in succ:
                 if item[0] not in visited:
                     newPath = path + [item[1]] # Calculate new path
                     frontier.push((item[0], newPath))
-    
+
     # util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     frontier = util.Queue()
-    
+
     visited = [] # Visited states
     path = [] # Every state keeps it's path from the starting state.
-    
+
     # Check if initial state is goal state #
     if problem.isGoalState(problem.getStartState()):
         return []
-    
+
     # Start from the beginning and find a solution, path is an empty list #
     frontier.push((problem.getStartState(), []))
-    
+
     while(1):
-        
+
         # Terminate condition: can't find solution #
         if frontier.isEmpty():
             return []
-        
+
         # Get informations of current state #
         xy, path = frontier.pop() # Take position and path
         visited.append(xy)
-        
+
         if problem.isGoalState(xy):
             return path
-        
+
         # Get successors of current state #
         succ = problem.getSuccessors(xy)
-        
+
         # Add new state in stack and fix their path #
         if succ:
             for item in succ:
@@ -225,7 +225,7 @@ def uniformCostSearch(problem):
                         frontier.update((item[0],newPath),newPri)
 
     # util.raiseNotDefined()
-    
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -233,7 +233,7 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
-    
+
 from util import PriorityQueue
 class MyPriorityQueueWithFunction(PriorityQueue):
     """
@@ -247,80 +247,40 @@ class MyPriorityQueueWithFunction(PriorityQueue):
         self.priorityFunction = priorityFunction # store the priority function
         PriorityQueue.__init__(self)
         self.problem = problem
-        
+
     def push(self, item, heuristic):
         "Adds an item to the queue with priority from the priority function"
         PriorityQueue.push(self, item, self.priorityFunction(self.problem, item, heuristic))
-    
+
 # Calculate f(n) = g(n) + h(n) #
 def f(problem, state, heuristic):
-    
+
     return problem.getCostOfActions(state[1]) + heuristic(state[0], problem)
-        
-        
-def greedySearch(statem, problem=None):
-    """Search the node of least total cost first."""
-     # queueXY: ((x,y),[path],priority) #
-    queueXY = util.PriorityQueue()
 
-    visited = [] # Visited states
-    path = [] # Every state keeps it's path from the starting state
 
-    # Check if initial state is goal state #
-    if problem.isGoalState(problem.getStartState()):
-        return []
+def greedySearch(problem, heuristic=nullHeuristic):
+    frontier = util.PriorityQueue()
+    explored = set()
+    frontier.push((problem.getStartState(),[]), heuristic(problem.getStartState(),problem))
 
-    # Start from the beginning and find a solution, path is empty list #
-    # with the cheapest priority                                       #
-    queueXY.push((problem.getStartState(),[]),0)
+    while True:
+        element_popped = frontier.pop()
+        node = element_popped[0]
+        actions = element_popped[1]
 
-    while(True):
+        if problem.isGoalState(node):
+            break
+        else:
+            if node not in explored:
+                explored.add(node)
+                successors = problem.getSuccessors(node)
+                for i in successors:
+                    childNode = i[0]
+                    childAction = i[1]
+                    newAction = actions + [childAction]
+                    frontier.push((childNode,newAction), heuristic(childNode,problem))
+    return actions
 
-        # Terminate condition: can't find solution #
-        if queueXY.isEmpty():
-            return []
-
-        # Get informations of current state #
-        xy,path = queueXY.pop() # Take position and path
-        visited.append(xy)
-
-        # This only works for autograder    #
-        # In lectures we check if a state is a goal when we find successors #
-
-        # Terminate condition: reach goal #
-        if problem.isGoalState(xy):
-            return path
-
-        # Get successors of current state #
-        succ = problem.getSuccessors(xy)
-
-        # Add new states in queue and fix their path #
-        if succ:
-            for item in succ:
-                if item[0] not in visited and (item[0] not in (state[2][0] for state in queueXY.heap)):
-
-                    #    Like previous algorithms: we should check in this point if successor
-                    #    is a goal state so as to follow lectures code
-
-                    newPath = path + [item[1]]
-                    pri = problem.getCostOfActions(newPath)
-
-                    queueXY.push((item[0],newPath),pri)
-
-                # State is in queue. Check if appriximate current cost is cheaper from the previous one #
-                elif item[0] not in visited and (item[0] in (state[2][0] for state in queueXY.heap)):
-                    for state in queueXY.heap:
-                        if state[2][0] == item[0]:
-                            oldPri = problem.getCostOfActions(state[2][1])
-
-                    newPri = problem.getCostOfActions(path + [item[1]])
-
-                    # State is cheaper with his hew father -> update and fix parent #
-                    if oldPri > newPri:
-                        newPath = path + [item[1]]
-                        queueXY.update((item[0],newPath),newPri)
-                        
-                        
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     frontier = MyPriorityQueueWithFunction(problem, f)
